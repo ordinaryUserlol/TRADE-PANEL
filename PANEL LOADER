@@ -1,11 +1,10 @@
--- LOADING SCREEN BEFORE MAIN SCRIPT
+-- SERVICES
 local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 -- BLOCK ALL INPUT
 local function blockInput()
@@ -14,25 +13,22 @@ end
 ContextActionService:BindAction("BlockAllInput", blockInput, false, unpack(Enum.UserInputType:GetEnumItems()))
 ContextActionService:BindAction("BlockAllInputKeys", blockInput, false, unpack(Enum.KeyCode:GetEnumItems()))
 
--- Disable Reset button (forces player to use Roblox menu close)
+-- Disable Reset button
 StarterGui:SetCore("ResetButtonCallback", false)
 
--- ScreenGui (TopMost)
+-- CREATE LOADING SCREEN GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.DisplayOrder = 1e6 -- max priority
+ScreenGui.DisplayOrder = 1e6
 ScreenGui.Parent = game.CoreGui
 
--- FULLSCREEN COVER
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(1, 0, 1, 0)
+MainFrame.Size = UDim2.new(1,0,1,0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
 MainFrame.ZIndex = 1e6
 MainFrame.Parent = ScreenGui
 
--- BACKGROUND GRADIENT
 local UIGradient = Instance.new("UIGradient")
 UIGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 255)),
@@ -41,57 +37,16 @@ UIGradient.Color = ColorSequence.new{
 UIGradient.Rotation = 45
 UIGradient.Parent = MainFrame
 
--- FLOATING PARTICLES
-for i = 1, 20 do
-    local particle = Instance.new("Frame")
-    particle.Size = UDim2.new(0, math.random(20, 50), 0, math.random(20, 50))
-    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
-    particle.BackgroundColor3 = Color3.fromRGB(math.random(100, 255), math.random(0, 100), math.random(150, 255))
-    particle.BackgroundTransparency = 0.7
-    particle.BorderSizePixel = 0
-    particle.ZIndex = 1e6
-    particle.Parent = MainFrame
-    Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
-
-    task.spawn(function()
-        while particle.Parent do
-            TweenService:Create(
-                particle,
-                TweenInfo.new(math.random(5, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
-                {Position = UDim2.new(math.random(), 0, math.random(), 0)}
-            ):Play()
-            task.wait(math.random(5, 12))
-        end
-    end)
-end
-
--- ROTATING RING
-local Ring = Instance.new("ImageLabel")
-Ring.Size = UDim2.new(0, 300, 0, 300)
-Ring.Position = UDim2.new(0.5, -150, 0.35, -150)
-Ring.BackgroundTransparency = 1
-Ring.Image = "rbxassetid://7743864258"
-Ring.ImageColor3 = Color3.fromRGB(200, 100, 255)
-Ring.ZIndex = 1e6
-Ring.Parent = MainFrame
-task.spawn(function()
-    while Ring.Parent do
-        Ring.Rotation = (Ring.Rotation + 0.1) % 360
-        task.wait()
-    end
-end)
-
--- LOADING TEXT
 local LoadingLabel = Instance.new("TextLabel")
-LoadingLabel.Size = UDim2.new(1, 0, 0, 100)
-LoadingLabel.Position = UDim2.new(0, 0, 0.35, 0)
+LoadingLabel.Size = UDim2.new(1,0,0,100)
+LoadingLabel.Position = UDim2.new(0,0,0.35,0)
 LoadingLabel.BackgroundTransparency = 1
 LoadingLabel.Text = "⏳💼 LOADING TRADE PANEL 💼⏳"
-LoadingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadingLabel.TextColor3 = Color3.fromRGB(255,255,255)
 LoadingLabel.TextScaled = true
 LoadingLabel.Font = Enum.Font.GothamBold
-LoadingLabel.ZIndex = 1e6
-LoadingLabel.Parent = MainFrame
+LoadingLabel.ZIndex = 1e6 + 5
+LoadingLabel.Parent = ScreenGui
 
 local TextGradient = Instance.new("UIGradient")
 TextGradient.Color = ColorSequence.new{
@@ -109,20 +64,19 @@ task.spawn(function()
     end
 end)
 
--- PROGRESS BAR
 local BarFrame = Instance.new("Frame")
-BarFrame.Size = UDim2.new(0.6, 0, 0, 30)
-BarFrame.Position = UDim2.new(0.2, 0, 0.55, 0)
-BarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+BarFrame.Size = UDim2.new(0.6,0,0,30)
+BarFrame.Position = UDim2.new(0.2,0,0.55,0)
+BarFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
 BarFrame.BorderSizePixel = 0
-BarFrame.ZIndex = 1e6
-BarFrame.Parent = MainFrame
+BarFrame.ZIndex = 1e6 + 5
+BarFrame.Parent = ScreenGui
 Instance.new("UICorner", BarFrame)
 
 local FillFrame = Instance.new("Frame")
-FillFrame.Size = UDim2.new(0, 0, 1, 0)
+FillFrame.Size = UDim2.new(0,0,1,0)
 FillFrame.BorderSizePixel = 0
-FillFrame.ZIndex = 1e6
+FillFrame.ZIndex = 1e6 + 10
 FillFrame.Parent = BarFrame
 Instance.new("UICorner", FillFrame)
 
@@ -133,22 +87,78 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local PercentLabel = Instance.new("TextLabel")
-PercentLabel.Size = UDim2.new(1, 0, 0, 30)
-PercentLabel.Position = UDim2.new(0, 0, 1.1, 0)
+PercentLabel.Size = UDim2.new(1,0,0,30)
+PercentLabel.Position = UDim2.new(0,0,1.1,0)
 PercentLabel.BackgroundTransparency = 1
 PercentLabel.Text = "0%"
-PercentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+PercentLabel.TextColor3 = Color3.fromRGB(255,255,255)
 PercentLabel.TextScaled = true
 PercentLabel.Font = Enum.Font.GothamBold
-PercentLabel.ZIndex = 1e6
+PercentLabel.ZIndex = 1e6 + 10
 PercentLabel.Parent = BarFrame
+
+-- FLOATING PARTICLES CONTAINER (ON TOP)
+local ParticlesContainer = Instance.new("Frame")
+ParticlesContainer.Size = UDim2.new(1,0,1,0)
+ParticlesContainer.BackgroundTransparency = 1
+ParticlesContainer.ZIndex = 1e6 + 20 -- top layer
+ParticlesContainer.Parent = ScreenGui
+
+-- Particle creation function
+local particleCount = 40
+local particles = {}
+
+for i = 1, particleCount do
+    local p = Instance.new("Frame")
+    p.Size = UDim2.new(0, 8, 0, 8)
+    p.Position = UDim2.new(math.random(), math.random(-5,5)/10, math.random(), math.random(-5,5)/10)
+    p.AnchorPoint = Vector2.new(0.5,0.5)
+    p.BackgroundColor3 = Color3.fromHSV(math.random(), 1, 1)
+    p.BackgroundTransparency = 0.7
+    p.ZIndex = 1e6 + 20
+    p.Parent = ParticlesContainer
+    Instance.new("UICorner", p)
+    table.insert(particles, p)
+end
+
+-- Animate particles with smooth rgb cycle and drifting
+local step = 0
+RunService.RenderStepped:Connect(function(dt)
+    step = step + dt
+    for i, p in ipairs(particles) do
+        -- drift slowly
+        local xOff = math.sin(step + i) * 0.001
+        local yOff = math.cos(step + i*1.5) * 0.0015
+        local pos = p.Position
+        local newX = pos.X.Scale + xOff
+        local newY = pos.Y.Scale + yOff
+
+        -- wrap around edges
+        if newX > 1.05 then newX = -0.05 end
+        if newX < -0.05 then newX = 1.05 end
+        if newY > 1.05 then newY = -0.05 end
+        if newY < -0.05 then newY = 1.05 end
+
+        p.Position = UDim2.new(newX,0,newY,0)
+
+        -- color cycle with gradient effect
+        local hue = (step*0.2 + i/particleCount) % 1
+        local sat = 0.8 + 0.2 * math.sin(step*2 + i)
+        local val = 0.9
+        p.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+    end
+end)
 
 -- FADE IN
 MainFrame.BackgroundTransparency = 1
 TweenService:Create(MainFrame, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+TweenService:Create(LoadingLabel, TweenInfo.new(1), {TextTransparency = 0}):Play()
+TweenService:Create(BarFrame, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+TweenService:Create(FillFrame, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+TweenService:Create(PercentLabel, TweenInfo.new(1), {TextTransparency = 0}):Play()
 
--- LOADING (1.5 min)
-local duration = 90
+-- LOADING LOOP (~60 seconds)
+local duration = 60
 local startTime = tick()
 while tick() - startTime < duration do
     local progress = ((tick() - startTime) / duration) * 100
@@ -160,6 +170,12 @@ end
 
 -- FADE OUT
 TweenService:Create(MainFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+TweenService:Create(LoadingLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+TweenService:Create(BarFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+TweenService:Create(FillFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+TweenService:Create(PercentLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+TweenService:Create(ParticlesContainer, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+
 task.wait(1)
 ScreenGui:Destroy()
 
@@ -168,8 +184,81 @@ ContextActionService:UnbindAction("BlockAllInput")
 ContextActionService:UnbindAction("BlockAllInputKeys")
 StarterGui:SetCore("ResetButtonCallback", true)
 
--- LOAD MAIN SCRIPT
-loadstring(game:HttpGet("https://raw.githubusercontent.com/ordinaryUserlol/TRADE-PANEL/refs/heads/main/PANEL%20LOADER"))()
+-- MAIN SCRIPT: TRADE PANEL GUI
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- Notification function
+local function Notify(msg)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Trade Panel",
+        Text = msg,
+        Duration = 3
+    })
+end
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.Name = "TradePanel"
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 280, 0, 200)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 128)), -- Purple
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 255)), -- Blue
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))    -- Red
+}
+gradient.Rotation = 45
+gradient.Parent = frame
+
+-- Dragging (PC & Mobile)
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
 -- Title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
