@@ -1,0 +1,118 @@
+--// TRADE PANEL GUI
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- Notification function
+local function Notify(msg)
+    StarterGui:SetCore("SendNotification", {
+        Title = "Trade Panel",
+        Text = msg,
+        Duration = 3
+    })
+end
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.Name = "TradePanel"
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 280, 0, 200)
+frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
+frame.BackgroundTransparency = 0
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 128)), -- Purple
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 255)), -- Blue
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))    -- Red
+}
+gradient.Rotation = 45
+gradient.Parent = frame
+
+-- Dragging (PC & Mobile)
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or 
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "💰 TRADE PANEL 💰"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = frame
+
+-- Button Creator
+local function createButton(name, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Position = UDim2.new(0.05, 0, 0, yPos)
+    btn.Text = name .. " (OFF)"
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 16
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- OFF red
+    btn.Parent = frame
+
+    local on = false
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        if on then
+            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- ON green
+            btn.Text = name .. " (ON)"
+            Notify(name .. " Activated ✅")
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- OFF red
+            btn.Text = name .. " (OFF)"
+            Notify(name .. " Deactivated ❌")
+        end
+    end)
+
+    return btn
+end
+
+-- Buttons
+createButton("Freeze Trade", 50)
+createButton("Trade Scam", 100)
+createButton("Auto Accept", 150)
